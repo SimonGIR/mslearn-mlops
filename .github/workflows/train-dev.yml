@@ -2,6 +2,12 @@ name: Train model in dev
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/train-model-parameters.py'
+      - 'src/job.yml'
 
 permissions:
   contents: read
@@ -41,7 +47,6 @@ jobs:
           fi
 
           az configure --defaults group="$RG_NAME" workspace="$WS_NAME"
-
           echo "resource_group=$RG_NAME" >> "$GITHUB_OUTPUT"
           echo "workspace=$WS_NAME" >> "$GITHUB_OUTPUT"
 
@@ -69,7 +74,6 @@ jobs:
 
           echo "Dev accuracy: $ACC"
           echo "Dev AUC: $AUC"
-
           echo "dev_accuracy=$ACC" >> "$GITHUB_OUTPUT"
           echo "dev_auc=$AUC" >> "$GITHUB_OUTPUT"
 
@@ -80,10 +84,10 @@ jobs:
           script: |
             const acc = '${{ steps.parse-metrics.outputs.dev_accuracy }}';
             const auc = '${{ steps.parse-metrics.outputs.dev_auc }}';
-
             const prNumber = context.payload.pull_request.number;
 
             let body = '✅ Dev training workflow completed.';
+
             if (acc || auc) {
               body += '\n\n**Dev evaluation metrics**';
               if (acc) body += `\n- Accuracy: ${acc}`;
